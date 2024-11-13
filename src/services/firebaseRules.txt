@@ -1,0 +1,44 @@
+// Firestore Rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // User profiles are readable by anyone but only writable by the owner
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Messages are readable and writable by authenticated users
+    match /messages/{messageId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Stories are readable by anyone but only writable by the owner
+    match /stories/{storyId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+    
+    // Posts are readable by anyone but only writable by the owner
+    match /posts/{postId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+    
+    // Guest access tracking
+    match /guestAccess/{ip} {
+      allow read, write: if true;
+    }
+  }
+}
+
+// Storage Rules
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}
